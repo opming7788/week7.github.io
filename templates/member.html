@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>會員頁面</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        width: 500px;
+        margin: 0 auto;
+        margin-top: 20px;
+        text-align: center;
+      }
+      .input-group {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+      }
+      .input-group label {
+        flex: 0 0 80px; /* 固定帳號和密碼文字的寬度 */
+        text-align: right;
+        margin-right: 10px;
+        font-size: 25px;
+      }
+      .input-group input {
+        flex: 1; /* 輸入欄位自動填滿剩餘寬度 */
+        padding: 10px;
+        box-sizing: border-box;
+      }
+      .header {
+        display: flex;
+        font-size: 30px;
+        width: 100%;
+        /* text-align: center; */
+        background-color: rgb(202, 181, 221);
+        align-items: center;
+        justify-content: center;
+        height: 100px;
+      }
+      .header2 {
+        display: flex;
+        font-size: 25px;
+        width: 100%;
+        /* text-align: center; */
+        margin-left: 10px;
+        align-items: end;
+        justify-content: center;
+        height: 80px;
+      }
+
+      .membername_header {
+        display: flex;
+        font-size: 25px;
+        width: 100%;
+        /* text-align: center; */
+        margin-left: 0px;
+        align-items: center;
+        justify-content: center;
+        height: 80px;
+      }
+
+      button {
+        padding: 6px 12px; /* 上下各增加 6px，左右各增加 12px 的內邊距 */
+        margin-left: 5px;
+      }
+      .hline {
+        margin-top: 50px;
+      }
+      .usercontents {
+        font-size: 20px;
+        margin: 10px;
+      }
+      .custom-button {
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        font-size: 12px;
+      }
+      .container2 {
+        width: 300px;
+        margin: 0 auto;
+        margin-top: 20px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div>歡迎光臨，這是會員頁面</div>
+    </div>
+    <div class="header2">{{yourname}}，歡迎登入系統</div>
+    <div class="header2"><a href="/signout">登出系統</a></div>
+
+    <div class="header2">查詢會員姓名</div>
+    <div class="container2">
+      <form method="get" id="Member_Query" onsubmit="MemberQuery(event)">
+        <div class="input-group">
+          <input type="text" id="username" name="username" />
+          <button type="submit">查詢</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="membername_header" id="membername"></div>
+
+    <div class="header2">更新我的姓名</div>
+    <div class="container2">
+      <form id="UpdateMember_Name" onsubmit="UpdateMemberName(event)">
+        <div class="input-group">
+          <input type="text" id="UpdateName" name="UpdateName" required />
+          <button type="submit">更新</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="membername_header" id="UpdateNamecontent"></div>
+
+    <hr />
+    <div class="header2">快來留言吧</div>
+    <div class="container">
+      <form action="/createMessage" method="post">
+        <div class="input-group">
+          <label for="username">內容</label>
+          <input type="text" id="mycontent" name="mycontent" required /><br />
+        </div>
+        <button type="submit">送出</button>
+      </form>
+    </div>
+
+    <hr />
+
+    <div class="container">
+      {% for usercontent in usersandcontents %}
+      <form
+        action="/DeleteMessage"
+        method="post"
+        onsubmit="return confirmDelete()"
+      >
+        <div class="usercontents">
+          <strong>{{usercontent[0]}}</strong> :{{usercontent[1]}} {% if username
+          == usercontent[2]%}
+          <input
+            type="hidden"
+            name="myDelcontent"
+            value="{{ usercontent[3] }}"
+          />
+          <button class="custom-button" type="submit" onclick="showAlert()">
+            X
+          </button>
+          {% endif %}
+        </div>
+      </form>
+      {% endfor %}
+    </div>
+
+    <script>
+      function confirmDelete() {
+        return confirm("確定要刪除這條留言嗎？");
+      }
+
+      async function MemberQuery(event) {
+        event.preventDefault();
+        const username = document.getElementById("username").value;
+        const url = new URL("/api/member", window.location.href);
+        url.searchParams.append("username", username);
+        const response = await fetch(url.href, {
+          method: "GET",
+        });
+        const data = await response.json();
+        const membername = document.getElementById("membername");
+        membername.innerHTML = "";
+        let contentTextNode;
+        if (data.data !== null) {
+          contentTextNode = document.createTextNode(
+            `${data.data.name} (${data.data.username})` //返回的是 { "data": { "name": ..., "username": ... } }
+          );
+        } else {
+          contentTextNode = document.createTextNode("NO DATA");
+        }
+        membername.appendChild(contentTextNode);
+      }
+
+      async function UpdateMemberName(event) {
+        event.preventDefault();
+        const UpdateName = document.getElementById("UpdateName").value;
+
+        const requestBody = JSON.stringify({
+          name: UpdateName,
+        });
+
+        const response = await fetch("/api/member", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json", // JSON 格式
+          },
+          // body: JSON.stringify(requestBody),
+          body: requestBody,
+        });
+        const myresp = await response.json();
+        const UpdateNamecontent = document.getElementById("UpdateNamecontent");
+        UpdateNamecontent.innerHTML = "";
+        let contentTextNode;
+        if (myresp.ok) {
+          contentTextNode = document.createTextNode("更新成功");
+        } else {
+          contentTextNode = document.createTextNode("更新失敗");
+        }
+        UpdateNamecontent.appendChild(contentTextNode);
+      }
+    </script>
+  </body>
+</html>
