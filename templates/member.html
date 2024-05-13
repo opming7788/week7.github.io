@@ -92,7 +92,7 @@
     <div class="header">
       <div>歡迎光臨，這是會員頁面</div>
     </div>
-    <div class="header2">{{yourname}}，歡迎登入系統</div>
+    <div class="header2" id="signinName">{{yourname}}，歡迎登入系統</div>
     <div class="header2"><a href="/signout">登出系統</a></div>
 
     <div class="header2">查詢會員姓名</div>
@@ -202,14 +202,21 @@
         });
         const myresp = await response.json();
         const UpdateNamecontent = document.getElementById("UpdateNamecontent");
+        const signinNameDiv = document.getElementById("signinName");
         UpdateNamecontent.innerHTML = "";
+        signinNameDiv.innerHTML = "";
         let contentTextNode;
+        let signinNameTextNode;
         if (myresp.ok) {
           contentTextNode = document.createTextNode("更新成功");
+          signinNameTextNode = document.createTextNode(
+            UpdateName + "，歡迎登入系統"
+          );
         } else {
           contentTextNode = document.createTextNode("更新失敗");
         }
         UpdateNamecontent.appendChild(contentTextNode);
+        signinNameDiv.appendChild(signinNameTextNode);
       }
     </script>
   </body>
